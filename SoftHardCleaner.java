@@ -26,6 +26,7 @@ public class SoftHardCleaner
 		extends SimpleFileVisitor<Path>
 	{
 		private FileAttributeFilter fileAttributeFilter;
+		private ActionTaker         actionTaker;
 
 		List<Path> files = new LinkedList<>();
 
@@ -49,10 +50,21 @@ public class SoftHardCleaner
 			return files;
 		}
 
-		public ListFiles(FileAttributeFilter fileAttributeFilter)
+		public void setActionTaker(ActionTaker actionTaker)
+		{
+			this.actionTaker = actionTaker; 
+		}
+
+		public ActionTaker getActionTaker()
+		{
+			return actionTaker;
+		}
+
+		public ListFiles(FileAttributeFilter fileAttributeFilter, ActionTaker actionTaker)
 		{
 			super();
 			this.fileAttributeFilter = fileAttributeFilter;
+			this.actionTaker         = actionTaker        ;
 		}
 
 		@Override
@@ -60,7 +72,7 @@ public class SoftHardCleaner
 		{
 			if (getFileAttributeFilter().accept(attr))
 			{
-				System.out.println("File found " +file);
+				getActionTaker().action(file);
 				getFiles().add(file);
 			}
 			return FileVisitResult.CONTINUE;
@@ -80,7 +92,7 @@ public class SoftHardCleaner
 	{
 		Files.walkFileTree(
 				path,
-				new ListFiles(fileAttributeFilter));
+				new ListFiles(fileAttributeFilter, new FilePrinter()));
 	}
 
 	/**
@@ -102,6 +114,7 @@ public class SoftHardCleaner
 					new AccessDateFilter(
 						new SimpleDateFormat("y-M-d H:m:s").parse(date)),
 					path);
+
 		}
 		catch (ParseException e)
 		{
