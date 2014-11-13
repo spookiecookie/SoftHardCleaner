@@ -25,9 +25,19 @@ public class SoftHardCleaner
 	public static class ListFiles
 		extends SimpleFileVisitor<Path>
 	{
-		private final Date latestAccessDate;
+		private FileAttributeFilter fileAttributeFilter;
 
 		List<Path> files = new LinkedList<>();
+
+		public void setFileAttributeFilter(FileAttributeFilter fileAttributeFilter)
+		{
+			this.fileAttributeFilter = fileAttributeFilter; 
+		}
+
+		public FileAttributeFilter getFileAttributeFilter()
+		{
+			return fileAttributeFilter;
+		}
 
 		public void setFiles(List<Path> files)
 		{
@@ -39,22 +49,16 @@ public class SoftHardCleaner
 			return files;
 		}
 
-		public Date getLatestAccessDate()
-		{
-			return latestAccessDate;
-		}
-
-		public ListFiles(Date lad)
+		public ListFiles(FileAttributeFilter fileAttributeFilter)
 		{
 			super();
-			this.latestAccessDate = lad;
+			this.fileAttributeFilter = fileAttributeFilter;
 		}
 
 		@Override
 		public FileVisitResult visitFile(Path file, BasicFileAttributes attr)
 		{
-			if (new Date(attr.lastAccessTime().toMillis())
-					.before(getLatestAccessDate()))
+			if (getFileAttributeFilter().accept(attr))
 			{
 				System.out.println("File found " +file);
 				getFiles().add(file);
@@ -71,11 +75,12 @@ public class SoftHardCleaner
 		System.out.println("For example \"2010-10-21 12:00:00\" directory");
 	}
 
-	public void fileFind(Date date, Path path)
+	public void fileFind(FileAttributeFilter fileAttributeFilter, Path path)
 		throws IOException
 	{
-		ListFiles lf = new ListFiles(date);
-		Files.walkFileTree(path, lf);
+		Files.walkFileTree(
+				path,
+				new ListFiles(fileAttributeFilter));
 	}
 
 	/**
@@ -94,7 +99,8 @@ public class SoftHardCleaner
 		try
 		{
 			shc.fileFind(
-					new SimpleDateFormat("y-M-d H:m:s").parse(date),
+					new AccessDateFilter(
+						new SimpleDateFormat("y-M-d H:m:s").parse(date)),
 					path);
 		}
 		catch (ParseException e)
