@@ -92,7 +92,8 @@ public class SoftHardCleaner
 	{
 		Files.walkFileTree(
 				path,
-				new ListFiles(fileAttributeFilter, new FilePrinter()));
+				new ListFiles(fileAttributeFilter, 
+				new FilePrinter()));
 	}
 
 	/**
